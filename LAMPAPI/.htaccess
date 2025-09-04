@@ -1,0 +1,11 @@
+# ChatGPT generated 9/4/2025
+RewriteEngine On
+
+# Make sure we're in the right base folder
+RewriteBase /LAMPAPI/
+
+# If request is /user or /user/something → go to user.php
+RewriteRule ^user(/.*)?$ user.php [QSA,L]
+
+# If request is /contacts or /contacts/something → go to contacts.php
+RewriteRule ^contacts(/.*)?$ contacts.php [QSA,L]
