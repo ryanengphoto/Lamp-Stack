@@ -10,7 +10,7 @@ info:
     url: https://www.apache.org/licenses/LICENSE-2.0.html
   version: 1.0.0
 servers:
-  - url: http://insert-link.xyz/api
+  - url: http://smallpoosproj.ddns.net/LAMPAPI
 tags:
   - name: user
     description: Operations about the user
