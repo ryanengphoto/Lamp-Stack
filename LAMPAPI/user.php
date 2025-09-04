@@ -1,37 +1,74 @@
 <?php
 /*
-ChatGPT generated file to match openapi.yaml 
-and provide user methods boilerplate
+ChatGPT generated file to match openapi.yaml
+User endpoint handler
 
-Fill in functions below
+Fill in DB logic where TODO notes are
 
 9/4/2025
 */
 
-require 'db.php';
+//require 'db.php';
+
 header("Content-Type: application/json");
+// 🔹 Allow CORS for Swagger UI/browser testing
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
 
+// Handle CORS preflight
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
+
+// Figure out method + path
 $method  = $_SERVER['REQUEST_METHOD'];
-$request = trim($_SERVER['REQUEST_URI']);
-$base    = "/LAMPAPI/user";  // adjust if your base path changes
-$path    = substr($request, strlen($base));
+$request = $_SERVER['REQUEST_URI'];
 
+// adjust base path to match your API root
+$base = "/LAMPAPI/user";
+
+// strip query string
+if (strpos($request, '?') !== false) {
+    $request = strtok($request, '?');
+}
+
+$path = substr($request, strlen($base));
+
+// --- Routing ---
 if ($method === 'POST' && $path === '') {
     // POST /user → create user
     $data = json_decode(file_get_contents("php://input"), true);
-    echo json_encode(["message" => "User created", "user" => $data]);
+    // TODO: Insert into DB
+    echo json_encode([
+        "message" => "User created",
+        "user"    => $data
+    ]);
 }
 elseif ($method === 'GET' && preg_match('#^/([^/]+)$#', $path, $matches)) {
     // GET /user/{username}
     $username = $matches[1];
-    echo json_encode(["id" => 1, "username" => $username]);
+    // TODO: Lookup from DB
+    echo json_encode([
+        "id"       => 1,
+        "username" => $username,
+        "email"    => "test@example.com"
+    ]);
 }
 elseif ($method === 'DELETE' && preg_match('#^/([^/]+)$#', $path, $matches)) {
     // DELETE /user/{username}
     $username = $matches[1];
-    echo json_encode(["message" => "User $username deleted"]);
+    // TODO: Delete from DB
+    echo json_encode([
+        "message" => "User $username deleted"
+    ]);
 }
 else {
     http_response_code(404);
-    echo json_encode(["error" => "Not Found"]);
+    echo json_encode([
+        "error" => "Not Found",
+        "path"  => $path,
+        "method"=> $method
+    ]);
 }
