@@ -39,21 +39,21 @@ $path = substr($request, strlen($base));
 
 // --- Routing ---
 if ($method === 'POST' && $path === '') {
-    // POST /user → create user
     $data = json_decode(file_get_contents("php://input"), true);
 
     $newUser = createUser($data);
 
-    if ($newUser) {
+    if (isset($newUser['error'])) {
+        http_response_code(500);
+        echo json_encode($newUser); // send DB error
+    } else {
         echo json_encode([
             "message" => "User created",
             "user"    => $newUser
         ]);
-    } else {
-        http_response_code(500);
-        echo json_encode(["error" => "Failed to create user"]);
     }
 }
+
 
 elseif ($method === 'GET' && preg_match('#^/([^/]+)$#', $path, $matches)) {
     // GET /user/{login}
