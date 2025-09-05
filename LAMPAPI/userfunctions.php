@@ -2,27 +2,23 @@
 /*
 userfunctions.php
 Boilerplate DB functions for user endpoint
-
-👉 Fill in DB connection + query logic where TODO is
 */
 
-// Example: include your DB connection
+ // Example: include your DB connection
 // require_once 'db.php';
 
 /**
  * Create a new user
  *
- * @param array $data  User data (expects keys like username, email, password, etc.)
+ * @param array $data  User data (expects keys like login, firstName, lastName, password)
  * @return array|false Returns inserted user info or false on failure
  */
 function createUser($data) {
     // Extract fields safely
-    $username  = $data["username"]  ?? "";
+    $login  = $data["login"]  ?? "";
     $firstName = $data["firstName"] ?? "";
     $lastName  = $data["lastName"]  ?? "";
-    $email     = $data["email"]     ?? "";
     $password  = $data["password"]  ?? "";
-    $phone     = $data["phone"]     ?? "";
 
     // Hash password
     $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
@@ -34,10 +30,10 @@ function createUser($data) {
     }
 
     $stmt = $conn->prepare("
-        INSERT INTO Users (Username, FirstName, LastName, Email, Password, Phone)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO Users (login, FirstName, LastName, Password)
+        VALUES (?, ?, ?, ?)
     ");
-    $stmt->bind_param("ssssss", $username, $firstName, $lastName, $email, $hashedPassword, $phone);
+    $stmt->bind_param("ssss", $login, $firstName, $lastName, $hashedPassword);
 
     if ($stmt->execute()) {
         $newId = $conn->insert_id;
@@ -46,11 +42,9 @@ function createUser($data) {
 
         return [
             "id"        => $newId,
-            "username"  => $username,
+            "login"  => $login,
             "firstName" => $firstName,
-            "lastName"  => $lastName,
-            "email"     => $email,
-            "phone"     => $phone
+            "lastName"  => $lastName
         ];
     } else {
         $stmt->close();
@@ -60,18 +54,18 @@ function createUser($data) {
 }
 
 /**
- * Login user (verify username + password)
+ * Login user (verify login + password)
  *
- * @param string $username
+ * @param string $login
  * @param string $password
  * @return array|null Returns user record if valid, null otherwise
  */
-function loginUser($username, $password) {
+function loginUser($login, $password) {
     // TODO: replace with real DB lookup + password_verify
     // Example:
     // global $db;
-    // $stmt = $db->prepare("SELECT id, username, email, password FROM users WHERE username = ?");
-    // $stmt->execute([$username]);
+    // $stmt = $db->prepare("SELECT id, login, firstName, lastName, password FROM Users WHERE login = ?");
+    // $stmt->execute([$login]);
     // $user = $stmt->fetch(PDO::FETCH_ASSOC);
     // if ($user && password_verify($password, $user['password'])) {
     //     unset($user['password']); // don’t leak hash
@@ -80,11 +74,12 @@ function loginUser($username, $password) {
     // return null;
 
     // placeholder
-    if ($username === "test" && $password === "1234") {
+    if ($login === "test" && $password === "1234") {
         return [
-            "id"       => 1,
-            "username" => "test",
-            "email"    => "test@example.com"
+            "id"        => 1,
+            "login"  => "test",
+            "firstName" => "Test",
+            "lastName"  => "User"
         ];
     }
     return null;
@@ -93,15 +88,15 @@ function loginUser($username, $password) {
 /**
  * Delete user
  *
- * @param string $username
+ * @param string $login
  * @return bool True if deleted, false otherwise
  */
-function deleteUser($username) {
+function deleteUser($login) {
     // TODO: replace with real DB delete
     // Example:
     // global $db;
-    // $stmt = $db->prepare("DELETE FROM users WHERE username = ?");
-    // return $stmt->execute([$username]);
+    // $stmt = $db->prepare("DELETE FROM Users WHERE login = ?");
+    // return $stmt->execute([$login]);
 
     return true; // placeholder
 }

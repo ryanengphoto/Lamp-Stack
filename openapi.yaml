@@ -219,13 +219,7 @@ components:
         lastName:
           type: string
           example: James
-        email:
-          type: string
-          example: john@email.com
         password:
-          type: string
-          example: '12345'
-        phone:
           type: string
           example: '12345'
     Error:
