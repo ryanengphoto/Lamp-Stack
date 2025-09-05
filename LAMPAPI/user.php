@@ -9,6 +9,7 @@ Fill in DB logic where TODO notes are
 */
 
 //require 'db.php';
+require_once 'userfunctions.php';
 
 header("Content-Type: application/json");
 // 🔹 Allow CORS for Swagger UI/browser testing
@@ -38,30 +39,38 @@ $path = substr($request, strlen($base));
 
 // --- Routing ---
 if ($method === 'POST' && $path === '') {
-    // POST /user → create user
     $data = json_decode(file_get_contents("php://input"), true);
-    // TODO: Insert into DB
-    echo json_encode([
-        "message" => "User created",
-        "user"    => $data
-    ]);
+
+    $newUser = createUser($data);
+
+    if (isset($newUser['error'])) {
+        http_response_code(500);
+        echo json_encode($newUser); // send DB error
+    } else {
+        echo json_encode([
+            "message" => "User created",
+            "user"    => $newUser
+        ]);
+    }
 }
+
+
 elseif ($method === 'GET' && preg_match('#^/([^/]+)$#', $path, $matches)) {
-    // GET /user/{username}
-    $username = $matches[1];
+    // GET /user/{login}
+    $login = $matches[1];
     // TODO: Lookup from DB
     echo json_encode([
         "id"       => 1,
-        "username" => $username,
+        "login" => $login,
         "email"    => "test@example.com"
     ]);
 }
 elseif ($method === 'DELETE' && preg_match('#^/([^/]+)$#', $path, $matches)) {
-    // DELETE /user/{username}
-    $username = $matches[1];
+    // DELETE /user/{login}
+    $login = $matches[1];
     // TODO: Delete from DB
     echo json_encode([
-        "message" => "User $username deleted"
+        "message" => "User $login deleted"
     ]);
 }
 else {

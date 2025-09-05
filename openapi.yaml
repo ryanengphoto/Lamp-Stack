@@ -36,14 +36,14 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
 
-  /user/{username}:
+  /user/{login}:
     get:
       tags:
         - user
-      summary: Get user by username
+      summary: Get user by login
       operationId: getUserByName
       parameters:
-        - name: username
+        - name: login
           in: path
           required: true
           schema:
@@ -63,7 +63,7 @@ paths:
       summary: Delete user
       operationId: deleteUser
       parameters:
-        - name: username
+        - name: login
           in: path
           required: true
           schema:
@@ -210,7 +210,7 @@ components:
           type: integer
           format: int64
           example: 10
-        username:
+        login:
           type: string
           example: theUser
         firstName:
@@ -219,13 +219,7 @@ components:
         lastName:
           type: string
           example: James
-        email:
-          type: string
-          example: john@email.com
         password:
-          type: string
-          example: '12345'
-        phone:
           type: string
           example: '12345'
     Error:
