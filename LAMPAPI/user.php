@@ -56,21 +56,21 @@ if ($method === 'POST' && $path === '') {
 }
 
 elseif ($method === 'GET' && preg_match('#^/([^/]+)$#', $path, $matches)) {
-    // GET /user/{username}
-    $username = $matches[1];
+    // GET /user/{login}
+    $login = $matches[1];
     // TODO: Lookup from DB
     echo json_encode([
         "id"       => 1,
-        "username" => $username,
+        "login" => $login,
         "email"    => "test@example.com"
     ]);
 }
 elseif ($method === 'DELETE' && preg_match('#^/([^/]+)$#', $path, $matches)) {
-    // DELETE /user/{username}
-    $username = $matches[1];
+    // DELETE /user/{login}
+    $login = $matches[1];
     // TODO: Delete from DB
     echo json_encode([
-        "message" => "User $username deleted"
+        "message" => "User $login deleted"
     ]);
 }
 else {
