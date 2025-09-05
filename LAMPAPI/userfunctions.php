@@ -16,18 +16,47 @@ Boilerplate DB functions for user endpoint
  * @return array|false Returns inserted user info or false on failure
  */
 function createUser($data) {
-    // TODO: replace with real DB insert
-    // Example:
-    // global $db;
-    // $stmt = $db->prepare("INSERT INTO users (username, email, password) VALUES (?, ?, ?)");
-    // $stmt->execute([$data['username'], $data['email'], password_hash($data['password'], PASSWORD_DEFAULT)]);
-    // return [ "id" => $db->lastInsertId(), "username" => $data['username'], "email" => $data['email'] ];
+    // Extract fields safely
+    $username  = $data["username"]  ?? "";
+    $firstName = $data["firstName"] ?? "";
+    $lastName  = $data["lastName"]  ?? "";
+    $email     = $data["email"]     ?? "";
+    $password  = $data["password"]  ?? "";
+    $phone     = $data["phone"]     ?? "";
 
-    return [
-        "id"       => 1,
-        "username" => $data['username'] ?? null,
-        "email"    => $data['email'] ?? null
-    ];
+    // Hash password
+    $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+
+    // DB connection
+    $conn = new mysqli("localhost", "TheBeast", "WeLoveCOP4331", "COP4331");
+    if ($conn->connect_error) {
+        return false;
+    }
+
+    $stmt = $conn->prepare("
+        INSERT INTO Users (Username, FirstName, LastName, Email, Password, Phone)
+        VALUES (?, ?, ?, ?, ?, ?)
+    ");
+    $stmt->bind_param("ssssss", $username, $firstName, $lastName, $email, $hashedPassword, $phone);
+
+    if ($stmt->execute()) {
+        $newId = $conn->insert_id;
+        $stmt->close();
+        $conn->close();
+
+        return [
+            "id"        => $newId,
+            "username"  => $username,
+            "firstName" => $firstName,
+            "lastName"  => $lastName,
+            "email"     => $email,
+            "phone"     => $phone
+        ];
+    } else {
+        $stmt->close();
+        $conn->close();
+        return false;
+    }
 }
 
 /**

@@ -9,6 +9,7 @@ Fill in DB logic where TODO notes are
 */
 
 //require 'db.php';
+require_once 'userfunctions.php';
 
 header("Content-Type: application/json");
 // 🔹 Allow CORS for Swagger UI/browser testing
@@ -40,12 +41,20 @@ $path = substr($request, strlen($base));
 if ($method === 'POST' && $path === '') {
     // POST /user → create user
     $data = json_decode(file_get_contents("php://input"), true);
-    // TODO: Insert into DB
-    echo json_encode([
-        "message" => "User created",
-        "user"    => $data
-    ]);
+
+    $newUser = createUser($data);
+
+    if ($newUser) {
+        echo json_encode([
+            "message" => "User created",
+            "user"    => $newUser
+        ]);
+    } else {
+        http_response_code(500);
+        echo json_encode(["error" => "Failed to create user"]);
+    }
 }
+
 elseif ($method === 'GET' && preg_match('#^/([^/]+)$#', $path, $matches)) {
     // GET /user/{username}
     $username = $matches[1];
