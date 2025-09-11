@@ -46,17 +46,37 @@ function createUser($data) {
     }
 }
 
+/**
+ * Login user (verify login + password)
+ *
+ * @param string $login
+ * @param string $password
+ * @return array|null Returns user record if valid, null otherwise
+ */
 function loginUser($login, $password) {
-    // For now, placeholder; no DB lookup
-    if ($login === "test" && $password === "1234") {
-        return [
-            "id"        => 1,
-            "login"     => "test",
-            "firstName" => "Test",
-            "lastName"  => "User"
-        ];
-    }
-    return ["error" => "Invalid login or password"];
+	$conn = new mysqli("localhost", "TheBeast", "WeLoveCOP4331", "COP4331");
+	if ($conn->connect_error) {
+		return false;
+	}
+
+	$stmt = $conn->prepare("SELECT ID, login, firstName, lastName, password FROM Users WHERE login = ?");
+	$stmt->bind_param("s", $login);
+	$stmt->execute();
+	$result = $stmt->get_result();
+
+	$user = $result->fetch_assoc();
+	$stmt->close();
+	$conn->close();
+
+	if ($user) {
+		#if (password_verify($password, $user['password'])) {
+        if ($password === $user['password']) {
+			unset($user['password']);
+			return $user;
+		}
+	}
+
+	return null;
 }
 
 function deleteUser($login) {
