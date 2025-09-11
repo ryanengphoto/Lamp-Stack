@@ -1,91 +1,116 @@
 <?php
 /*
 userfunctions.php
-Clean DB functions for user endpoint
+Boilerplate DB functions for user endpoint
 */
 
-function createUser($data) {
-    $login     = $data["login"] ?? "";
-    $firstName = $data["firstName"] ?? "";
-    $lastName  = $data["lastName"] ?? "";
-    $password  = $data["password"] ?? ""; // plain text for now
+ // Example: include your DB connection
+// require_once 'db.php';
 
-    // Connect to DB
+/**
+ * Create a new user
+ *
+ * @param array $data  User data (expects keys like login, firstName, lastName, password)
+ * @return array|false Returns inserted user info or false on failure
+ */
+function createUser($data) {
+    // Extract fields safely
+    $login  = $data["login"]  ?? "";
+    $firstName = $data["firstName"] ?? "";
+    $lastName  = $data["lastName"]  ?? "";
+    $password  = $data["password"]  ?? "";
+
+    // Hash password
+    $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+
+    // DB connection
     $conn = new mysqli("localhost", "TheBeast", "WeLoveCOP4331", "COP4331");
     if ($conn->connect_error) {
-        return ["error" => "DB Connection failed: " . $conn->connect_error];
+        return false;
     }
 
-    // Prepare insert statement
     $stmt = $conn->prepare("
         INSERT INTO Users (login, FirstName, LastName, Password)
         VALUES (?, ?, ?, ?)
     ");
-    if (!$stmt) {
-        $conn->close();
-        return ["error" => "Prepare failed: " . $conn->error];
-    }
-
-    $stmt->bind_param("ssss", $login, $firstName, $lastName, $password);
+    $stmt->bind_param("ssss", $login, $firstName, $lastName, $hashedPassword);
 
     if ($stmt->execute()) {
         $newId = $conn->insert_id;
         $stmt->close();
         $conn->close();
+
         return [
             "id"        => $newId,
-            "login"     => $login,
+            "login"  => $login,
             "firstName" => $firstName,
             "lastName"  => $lastName
         ];
     } else {
-        $errorMsg = $stmt->error;
         $stmt->close();
         $conn->close();
-        return ["error" => "Insert failed: " . $errorMsg];
+        return false;
     }
 }
 
+/**
+ * Login user (verify login + password)
+ *
+ * @param string $login
+ * @param string $password
+ * @return array|null Returns user record if valid, null otherwise
+ */
 function loginUser($login, $password) {
-    // For now, placeholder; no DB lookup
-    if ($login === "test" && $password === "1234") {
-        return [
-            "id"        => 1,
-            "login"     => "test",
-            "firstName" => "Test",
-            "lastName"  => "User"
-        ];
-    }
-    return ["error" => "Invalid login or password"];
+	$conn = new mysqli("localhost", "TheBeast", "WeLoveCOP4331", "COP4331");
+	if ($conn->connect_error) {
+		return false;
+	}
+
+	$stmt = $conn->prepare("SELECT ID, login, firstName, lastName, password FROM Users WHERE login = ?");
+	$stmt->bind_param("s", $login);
+	$stmt->execute();
+	$result = $stmt->get_result();
+
+	$user = $result->fetch_assoc();
+	$stmt->close();
+	$conn->close();
+
+	if ($user) {
+		if (password_verify($password, $user['password'])) {
+			unset($user['password']);
+			return $user;
+		}
+	}
+
+	return null;
 }
 
+/**
+ * Delete user
+ *
+ * @param string $login
+ * @return bool True if deleted, false otherwise
+ */
 function deleteUser($login) {
     $conn = new mysqli("localhost", "TheBeast", "WeLoveCOP4331", "COP4331");
     if ($conn->connect_error) {
-        return ["error" => "DB Connection failed: " . $conn->connect_error];
+	    return false;
     }
 
     $stmt = $conn->prepare("DELETE FROM Users WHERE login = ?");
     if (!$stmt) {
-        $conn->close();
-        return ["error" => "Prepare failed: " . $conn->error];
+	    $conn->close();
+	    return false;
     }
 
     $stmt->bind_param("s", $login);
+    $success = $stmt->execute();
 
-    if ($stmt->execute()) {
-        $affected = $stmt->affected_rows;
-        $stmt->close();
-        $conn->close();
-        if ($affected > 0) {
-            return ["message" => "User $login deleted"];
-        } else {
-            return ["error" => "User $login not found"];
-        }
-    } else {
-        $errorMsg = $stmt->error;
-        $stmt->close();
-        $conn->close();
-        return ["error" => "Delete failed: " . $errorMsg];
-    }
+    $deleted = $success && ($stmt->affected_rows > 0);
+
+    $stmt->close();
+    $conn->close();
+
+    return $deleted;
 }
+
