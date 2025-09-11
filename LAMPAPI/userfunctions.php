@@ -29,6 +29,18 @@ function createUser($data) {
         return false;
     }
 
+    $checkStmt = $conn->prepare("SELECT ID FROM Users WHERE login = ?");
+    $checkStmt->bind_param("s", $login);
+    $checkStmt->execute();
+    $checkStmt->store_result();
+
+    if ($checkStmt->num_rows > 0) {
+	    $checkStmt->close();
+	    $conn->close();
+	    return false;
+    }
+    $checkStmt->close();
+
     $stmt = $conn->prepare("
         INSERT INTO Users (login, FirstName, LastName, Password)
         VALUES (?, ?, ?, ?)
