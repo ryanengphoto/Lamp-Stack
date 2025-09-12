@@ -1,140 +1,103 @@
-body 
-{
-    background-color: #707070;
+/* --- fun login additions --- */
+.login-bg {
+  min-height: 100vh;
+  background: radial-gradient(1200px 600px at 10% -20%, #8ad, transparent 60%),
+              radial-gradient(1000px 500px at 110% 120%, #ad8, transparent 60%),
+              #707070; /* keeps your base bg */
 }
 
-#title 
-{
-    font-size: 40px;
-    width: 100%;
-    margin: 2% 5%;
-    text-align: center;
-    font-family: 'Ubuntu', sans-serif;
-    color: #FFFFFF;
+.card {
+  border-radius: 18px;
+  box-shadow: 0 12px 30px rgba(0,0,0,.25);
 }
 
-#loginDiv
-{
-    font-size: 30px;
-    width: 70%;
-    margin-left: 15%;
-    padding: 25px;
-    background-color: #b2b2b2;
+.login-greeting {
+  display: block;
+  text-align: center;
+  font-size: 0.9em;
+  margin-bottom: 10px;
+  color: #222;
 }
 
-#loggedInDiv
-{
-    font-size: 30px;
-    width: 70%;
-    margin-left: 15%;
-    padding: 25px;
-    background-color: #b2b2b2;
+.password-wrap {
+  position: relative;
+}
+.password-wrap input {
+  padding-right: 3rem;
+}
+.icon-btn {
+  position: absolute;
+  right: 12%;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: transparent;
+  font-size: 1.1em;
+  cursor: pointer;
 }
 
-#accessUIDiv
-{
-    font-size: 30px;
-    width: 70%;
-    margin-left: 15%;
-    padding: 25px;
-    background-color: #b2b2b2;
+.buttons {
+  position: relative;
+  overflow: hidden;
+}
+.spinner {
+  display: none;
+  position: absolute;
+  right: 26%;
+  top: 50%;
+  width: 16px; height: 16px;
+  border: 2px solid rgba(255,255,255,.6);
+  border-top-color: transparent;
+  border-radius: 50%;
+  transform: translateY(-50%);
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: translateY(-50%) rotate(360deg); } }
+
+.link-btn {
+  background: none;
+  border: none;
+  font-size: 0.8em;
+  text-decoration: underline;
+  cursor: pointer;
+  color: #222;
+}
+.tiny-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+}
+.remember {
+  font-size: 0.8em;
+  color: #222;
 }
 
-.buttons
-{
-    font-size: 30px;
-    border-radius: 25px;
-    width: 50%;
-    margin-left: 25%;
-    font-family: 'Ubuntu', sans-serif;
+/* error shake */
+.shake {
+  animation: shake 380ms ease-in-out;
+}
+@keyframes shake {
+  10%, 90% { transform: translateX(-2px); }
+  20%, 80% { transform: translateX(4px); }
+  30%, 50%, 70% { transform: translateX(-6px); }
+  40%, 60% { transform: translateX(6px); }
 }
 
-.buttons:hover{
-    background-color: #00d5124f;
-    color: #FFFFFF;
-    opacity: 50%;
+/* confetti */
+#confetti {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
 }
-
-#loginName
-{
-	font-size: 30px;
+.confetti-piece {
+  position: absolute;
+  width: 8px; height: 8px;
+  background: white;
+  opacity: .9;
+  animation: drop 900ms ease-out forwards;
 }
-#loginPassword
-{
-	font-size: 30px;
-}
-#searchText
-{
-	font-size: 30px;
-}
-#colorText
-{
-	font-size: 30px;
-}
-
-input[type="text"],input[type="password"]{
-    border-radius: 25px;
-    text-align: center;
-    width: 80%;
-    margin-left: 10%;
-    margin-bottom: 2%;
-    font-family: 'Ubuntu', sans-serif;
-}
-
-#inner-title{
-    display: inline-block;
-    font-size: 0.8em;
-    width: 90%;
-    text-align: center;
-    margin-left: 5%;
-    margin-bottom: 2%;
-    font-family: 'Ubuntu', sans-serif;
-    color: #95060a;
-}
-
-#loginResult{
-    display: inline-block;
-    font-size: 0.8em;
-    width: 90%;
-    text-align: center;
-    margin-left: 5%;
-    margin-bottom: 2%;
-    font-family: 'Ubuntu', sans-serif;
-    color: #95060a;
-}
-
-#userName{
-    display: inline-block;
-    width: 80%;
-    margin-left: 10%;
-    text-align: center;
-}
-
-#logoutButton{
-    width: 20%;
-    margin-left: 40%;
-}
-
-select{
-    width: 30%;
-    margin-left: 35%;
-    margin-top: 2%;
-    font-size: 0.75em;
-    font-family: 'Ubuntu', sans-serif;
-}
-
-#colorSearchResult{
-    display: none;
-}
-
-#colorAddResult{
-    display: inline-block;
-    font-size: 0.8em;
-    width: 90%;
-    text-align: center;
-    margin-left: 5%;
-    margin-top: 2%;
-    margin-bottom: 1%;
-    font-family: 'Ubuntu', sans-serif;
-    color: #95060a;
+@keyframes drop {
+  0%   { transform: translateY(-20px) rotate(0deg); }
+  100% { transform: translateY(40vh) rotate(240deg); opacity: 0; }
 }

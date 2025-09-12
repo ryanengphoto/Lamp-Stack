@@ -7,64 +7,112 @@ let lastName = "";
 
 function doLogin()
 {
-	userId = 0;
-	firstName = "";
-	lastName = "";
-	
-	let login = document.getElementById("loginName").value;
-	let password = document.getElementById("loginPassword").value;
-//	var hash = md5( password );
-	
-	document.getElementById("loginResult").innerHTML = "";
+  userId = 0; firstName = ""; lastName = "";
 
-	let tmp = {login:login,password:password};
-//	var tmp = {login:login,password:hash};
-	let jsonPayload = JSON.stringify( tmp );
-	
-	let url = urlBase + '/Login.' + extension;
+  const login = document.getElementById("loginName").value.trim();
+  const password = document.getElementById("loginPassword").value;
+  const resultEl = document.getElementById("loginResult");
+  const btn = document.getElementById("loginButton");
+  const spinner = document.getElementById("loginSpinner");
+  const btnText = document.getElementById("loginBtnText");
+  const remember = document.getElementById("rememberMe") ? document.getElementById("rememberMe").checked : false;
 
-	let xhr = new XMLHttpRequest();
-	xhr.open("POST", url, true);
-	xhr.setRequestHeader("Content-type", "application/json; charset=UTF-8");
-	try
-	{
-		xhr.onreadystatechange = function() 
-		{
-			if (this.readyState == 4 && this.status == 200) 
-			{
-				let jsonObject = JSON.parse( xhr.responseText );
-				userId = jsonObject.id;
-		
-				if( userId < 1 )
-				{		
-					document.getElementById("loginResult").innerHTML = "User/Password combination incorrect";
-					return;
-				}
-		
-				firstName = jsonObject.firstName;
-				lastName = jsonObject.lastName;
+  // quick client-side validation
+  if (!login || !password) {
+    resultEl.textContent = "Please enter a username and password.";
+    bump("#loginDiv");
+    return;
+  }
 
-				saveCookie();
-	
-				window.location.href = "color.html";
-			}
-		};
-		xhr.send(jsonPayload);
-	}
-	catch(err)
-	{
-		document.getElementById("loginResult").innerHTML = err.message;
-	}
+  // show loading state
+  if (btn) btn.disabled = true;
+  if (spinner) spinner.style.display = "inline-block";
+  if (btnText) btnText.textContent = "Signing in…";
+  resultEl.textContent = "";
 
+  // Optional: hash if your backend expects it
+  // const hash = md5(password);
+  const tmp = { login: login, password: password };
+  const jsonPayload = JSON.stringify(tmp);
+
+  // IMPORTANT: make sure urlBase matches your domain/path
+  const url = urlBase + '/Login.' + extension;
+
+  const xhr = new XMLHttpRequest();
+  xhr.open("POST", url, true);
+  xhr.setRequestHeader("Content-type", "application/json; charset=UTF-8");
+
+  xhr.onreadystatechange = function()
+  {
+    if (this.readyState !== 4) return;
+
+    // revert loading state
+    if (btn) btn.disabled = false;
+    if (spinner) spinner.style.display = "none";
+    if (btnText) btnText.textContent = "Do It";
+
+    if (this.status === 200)
+    {
+      try {
+        const jsonObject = JSON.parse(xhr.responseText);
+        userId = jsonObject.id;
+
+        if (userId < 1) {
+          resultEl.textContent = "Hmm… that combo doesn’t look right. Try again?";
+          bump("#loginDiv");
+          return;
+        }
+
+        firstName = jsonObject.firstName || "";
+        lastName = jsonObject.lastName || "";
+
+        // cookie lifespan based on "remember me"
+        saveCookie(remember ? 24*60 : 20); // minutes
+
+        // tiny confetti then redirect
+        confettiBurst();
+        setTimeout(() => { window.location.href = "color.html"; }, 600);
+      } catch(e) {
+        resultEl.textContent = "Unexpected response from server.";
+        bump("#loginDiv");
+      }
+    }
+    else
+    {
+      resultEl.textContent = "Login failed (network/server). Please try again.";
+      bump("#loginDiv");
+    }
+  };
+
+  xhr.onerror = function() {
+    if (btn) btn.disabled = false;
+    if (spinner) spinner.style.display = "none";
+    if (btnText) btnText.textContent = "Do It";
+    resultEl.textContent = "Network error. Check your connection and try again.";
+    bump("#loginDiv");
+  };
+
+  try { xhr.send(jsonPayload); }
+  catch(err) {
+    if (btn) btn.disabled = false;
+    if (spinner) spinner.style.display = "none";
+    if (btnText) btnText.textContent = "Do It";
+    resultEl.textContent = err.message;
+    bump("#loginDiv");
+  }
 }
 
-function saveCookie()
+
+function saveCookie(minutes)
 {
-	let minutes = 20;
-	let date = new Date();
-	date.setTime(date.getTime()+(minutes*60*1000));	
-	document.cookie = "firstName=" + firstName + ",lastName=" + lastName + ",userId=" + userId + ";expires=" + date.toGMTString();
+  const date = new Date();
+  date.setTime(date.getTime() + (minutes * 60 * 1000));
+  document.cookie = "firstName=" + firstName +
+                    ",lastName=" + lastName +
+                    ",userId=" + userId +
+                    ";expires=" + date.toGMTString() + ";path=/";
 }
+
 
 function readCookie()
 {
@@ -183,3 +231,29 @@ function searchColor()
 	}
 	
 }
+
+function bump(selector) {
+  const el = document.querySelector(selector);
+  if (!el) return;
+  el.classList.remove('shake');
+  // reflow so the animation can replay
+  void el.offsetWidth;
+  el.classList.add('shake');
+}
+
+function confettiBurst() {
+  const host = document.getElementById('confetti');
+  if (!host) return;
+  for (let i = 0; i < 24; i++) {
+    const p = document.createElement('div');
+    p.className = 'confetti-piece';
+    p.style.left = (50 + (Math.random()*20 - 10)) + 'vw';
+    p.style.top = '30vh';
+    p.style.background = ['#ff6b6b','#ffd93d','#6bcB77','#4d96ff','#e056fd'][Math.floor(Math.random()*5)];
+    p.style.animationDelay = (Math.random()*0.2) + 's';
+    p.style.transform = `translateY(-20px) rotate(${Math.random()*180}deg)`;
+    host.appendChild(p);
+    setTimeout(() => host.removeChild(p), 1200);
+  }
+}
+
