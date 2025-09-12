@@ -8,7 +8,7 @@ function createUser($data) {
     $login     = $data["login"] ?? "";
     $firstName = $data["firstName"] ?? "";
     $lastName  = $data["lastName"] ?? "";
-    $password  = $data["password"] ?? ""; // plain text for now
+    $password  = $data["password"] ?? "";
 
     // Connect to DB
     $conn = new mysqli("localhost", "TheBeast", "WeLoveCOP4331", "COP4331");
@@ -16,9 +16,9 @@ function createUser($data) {
         return ["error" => "DB Connection failed: " . $conn->connect_error];
     }
 
+    // Check for duplicate username
     $checkStmt = $conn->prepare("SELECT ID FROM Users WHERE login = ?");
-
-    if (!$stmt) {
+    if (!$checkStmt) {
         $conn->close();
         return ["error" => "Prepare failed: " . $conn->error];
     }
@@ -28,17 +28,17 @@ function createUser($data) {
     $checkStmt->store_result();
 
     if ($checkStmt->num_rows > 0) {
-	    $checkStmt->close();
-	    $conn->close();
-	    return ["error" => "Username already in use"];
+        $checkStmt->close();
+        $conn->close();
+        return ["error" => "Username already in use"];
     }
     $checkStmt->close();
 
+    // Insert new user
     $stmt = $conn->prepare("
         INSERT INTO Users (login, FirstName, LastName, Password)
         VALUES (?, ?, ?, ?)
     ");
-
     if (!$stmt) {
         $conn->close();
         return ["error" => "Prepare failed: " . $conn->error];
@@ -63,6 +63,7 @@ function createUser($data) {
         return ["error" => "Insert failed: " . $errorMsg];
     }
 }
+
 
 /**
  * Login user (verify login + password)
