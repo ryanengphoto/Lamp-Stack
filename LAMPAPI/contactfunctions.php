@@ -9,6 +9,28 @@ Boilerplate DB functions for contacts endpoint
 // Example: include your DB connection
 // require_once 'db.php';
 
+
+//General functions to be used by contact functions:
+function sendResultInfoAsJson($obj)
+{
+    header('Content-type: application/json');
+    echo $obj;
+}
+
+function returnWithError($err)
+{
+    $retValue = '{"error":"' . $err . '"}';
+    sendResultInfoAsJson($retValue);
+}
+
+function returnWithInfo($searchResults)
+{
+    $retValue = '{"results":"' .  $searchResults . '","error":""}';
+    sendResultInfoAsJson($retValue);
+}
+//end of general functions
+
+
 /**
  * Get all contacts
  *
@@ -58,11 +80,28 @@ function addContact($data) {
     // $stmt->execute([$data['firstName'], $data['lastName'], $data['email'], $data['phone']]);
     // return ["id" => $db->lastInsertId()] + $data;
 
-    return [
-        "id"        => 123,
-        "firstName" => $data['firstName'] ?? null,
-        "lastName"  => $data['lastName'] ?? null
-    ];
+    $firstName = $data["firstName"];
+    $lastName = $data["lastName"];
+    $phone = $data["phone"];
+    $email = $data["email"];
+    $userId = (int)($data["userId"]);
+
+    $conn = new mysqli("localhost", "TheBeast", "WeLoveCOP4331", "COP4331");
+    if ($conn->connect_error)
+    {
+        returnWithError($conn->connect_error);
+    }
+    else
+    {
+        $stmt = $conn->prepare("INSERT INTO Contacts (FirstName, LastName, Phone, Email, UserID) VALUES (?, ?, ?, ?, ?)");
+        $stmt->bind_param("ssssi", $firstName, $lastName, $phone, $email, $userId);
+        $stmt->execute();
+        $stmt->close();
+        $conn->close();
+
+        returnWithInfo("Contact added successfully.");
+    }
+
 }
 
 /**
