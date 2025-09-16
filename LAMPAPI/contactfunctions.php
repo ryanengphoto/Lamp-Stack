@@ -67,10 +67,58 @@ function getContactById($id) {
 }
 
 /**
+ * search contacts with string
+ * 
+ * @param json $data
+ * @return json indirectly via sendResultInfoAsJson()
+ */
+function searchContacts($data)
+{
+
+    $search = "%" . $data["search"] . "%";
+    $userId = (int)$data["userId"];
+
+    $conn = new mysqli("localhost", "TheBeast", "WeLoveCOP4331", "COP4331");
+    if ($conn->connect_error)
+    {
+        returnWithError($conn->connect_error);
+    }
+    else
+    {
+        $stmt = $conn->prepare("SELECT ID, FirstName, LastName, Phone, Email
+                FROM  Contacts
+                WHERE (FirstName LIKE ? OR LastName LIKE ? OR Phone LIKE ? OR Email LIKE ?) AND UserID = ?");
+        $stmt->bind_param("ssssi", $search, $search, $search, $search, $userId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $searchResults = "";
+        while ($row = $result->fetch_assoc()) 
+        {
+            if ($searchResults != "")
+            {
+                $searchResults .= ",";
+            }
+            $searchResults .= '{
+                "id":' . $row["ID"] .
+                ',"firstName":"' . $row["FirstName"] . '"' .
+                ',"lastName":"' . $row["LastName"] . '"' .
+                ',"phone":"' . $row["Phone"] . '"' .
+                ',"email":"' . $row["Email"] . '"}';
+        }
+        
+        $stmt->close();
+        $conn->close();
+        
+        returnWithInfo($searchResults);
+    }
+}
+
+/**
  * Add a new contact
  *
- * @param array $data
- * @return array|false
+ * @param json $data
+ * @return json indirectly via sendResultInfoAsJson()
  */
 function addContact($data) {
     // TODO: replace with real DB insert
