@@ -10,27 +10,6 @@ Boilerplate DB functions for contacts endpoint
 // require_once 'db.php';
 
 
-//General functions to be used by contact functions:
-function sendResultInfoAsJson($obj)
-{
-    header('Content-type: application/json');
-    echo $obj;
-}
-
-function returnWithError($err)
-{
-    $retValue = '{"error":"' . $err . '"}';
-    sendResultInfoAsJson($retValue);
-}
-
-function returnWithInfo($searchResults)
-{
-    $retValue = '{"results":"' .  $searchResults . '","error":""}';
-    sendResultInfoAsJson($retValue);
-}
-//end of general functions
-
-
 /**
  * Get all contacts
  *
@@ -150,11 +129,54 @@ function addContact($data) {
  * @param array $contacts
  * @return array
  */
-function addContactsBulk($contacts) {
-    // TODO: loop + insert into DB
-    // Example:
-    // foreach ($contacts as $c) { ... }
-    return $contacts;
+function addContactsBulk($contacts)
+{
+    $conn = new mysqli("localhost", "TheBeast", "WeLoveCOP4331", "COP4331");
+    if ($conn->connect_error)
+    {
+        return ["results" => "", "errors" => [$conn->connect_error]];
+    }
+
+    $stmt = $conn->prepare
+    (
+        "INSERT INTO Contacts (FirstName, LastName, Phone, Email, UserID) VALUES (?, ?, ?, ?, ?)"
+    );
+
+    if (!$stmt)
+    {
+        $conn->close();
+        return ["results" => "", "errors" => [$conn->error]];
+    }
+
+    $numSuccess = 0;
+    $errors = [];
+
+    //add contacts one by one
+    foreach($contacts as $c)
+    {
+        $firstName = $c["firstName"];
+        $lastName = $c["lastName"];
+        $phone = $c["phone"];
+        $email = $c["email"];
+        $userId = (int) $c["userId"];
+
+        $stmt->bind_param("ssssi", $firstName, $lastName, $phone, $email, $userId);
+
+        if ($stmt->execute())
+        {
+            $numSuccess++;
+        }
+        else
+        {
+            $errors[] = ["contact" => $c, "error" => $stmt->error];
+        }
+    }
+
+    $stmt->close();
+    $conn->close();
+
+
+    return ["results" => "$numSuccess contacts were added successfully", "errors" => $errors];
 }
 
 /**
