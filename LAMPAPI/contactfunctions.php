@@ -69,8 +69,8 @@ function getContactById($id) {
 /**
  * search contacts with string
  * 
- * @param json $data
- * @return json indirectly via sendResultInfoAsJson()
+ * @param array $data
+ * @return array
  */
 function searchContacts($data)
 {
@@ -81,7 +81,7 @@ function searchContacts($data)
     $conn = new mysqli("localhost", "TheBeast", "WeLoveCOP4331", "COP4331");
     if ($conn->connect_error)
     {
-        returnWithError($conn->connect_error);
+        return ["results" => [], "error" => $conn->connect_error];
     }
     else
     {
@@ -92,41 +92,33 @@ function searchContacts($data)
         $stmt->execute();
         $result = $stmt->get_result();
 
-        $searchResults = "";
+        $searchResults = [];
         while ($row = $result->fetch_assoc()) 
         {
-            if ($searchResults != "")
-            {
-                $searchResults .= ",";
-            }
-            $searchResults .= '{
-                "id":' . $row["ID"] .
-                ',"firstName":"' . $row["FirstName"] . '"' .
-                ',"lastName":"' . $row["LastName"] . '"' .
-                ',"phone":"' . $row["Phone"] . '"' .
-                ',"email":"' . $row["Email"] . '"}';
+            $searchResults[] =
+            [
+                "id" => (int) $row["ID"], 
+                "firstName" => $row["FirstName"],
+                "lastName" => $row["LastName"],
+                "phone" => $row["Phone"],
+                "email" => $row["Email"]
+            ];
         }
         
         $stmt->close();
         $conn->close();
         
-        returnWithInfo($searchResults);
+        return ["results" => $searchResults, "error" => ""];
     }
 }
 
 /**
  * Add a new contact
  *
- * @param json $data
- * @return json indirectly via sendResultInfoAsJson()
+ * @param array $data
+ * @return array
  */
 function addContact($data) {
-    // TODO: replace with real DB insert
-    // Example:
-    // global $db;
-    // $stmt = $db->prepare("INSERT INTO contacts (firstName, lastName, email, phone) VALUES (?, ?, ?, ?)");
-    // $stmt->execute([$data['firstName'], $data['lastName'], $data['email'], $data['phone']]);
-    // return ["id" => $db->lastInsertId()] + $data;
 
     $firstName = $data["firstName"];
     $lastName = $data["lastName"];
@@ -137,7 +129,7 @@ function addContact($data) {
     $conn = new mysqli("localhost", "TheBeast", "WeLoveCOP4331", "COP4331");
     if ($conn->connect_error)
     {
-        returnWithError($conn->connect_error);
+        return ["results" => "", "error" => $conn->connect_error];
     }
     else
     {
@@ -147,7 +139,7 @@ function addContact($data) {
         $stmt->close();
         $conn->close();
 
-        returnWithInfo("Contact added successfully.");
+        return ["results" => "Contact added successfully.", "error" => ""];
     }
 
 }
