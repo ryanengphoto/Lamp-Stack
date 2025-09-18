@@ -1,107 +1,130 @@
 <?php
 /*
 userfunctions.php
-Boilerplate DB functions for user endpoint
-
-👉 Fill in DB connection + query logic where TODO is
+Clean DB functions for user endpoint
 */
 
-// Example: include your DB connection
-// require_once 'db.php';
-
-/**
- * Create a new user
- *
- * @param array $data  User data (expects keys like username, email, password, etc.)
- * @return array|false Returns inserted user info or false on failure
- */
 function createUser($data) {
-    // Extract fields safely
-    $username  = $data["username"]  ?? "";
+    $login     = $data["login"] ?? "";
     $firstName = $data["firstName"] ?? "";
-    $lastName  = $data["lastName"]  ?? "";
-    $email     = $data["email"]     ?? "";
-    $password  = $data["password"]  ?? "";
-    $phone     = $data["phone"]     ?? "";
+    $lastName  = $data["lastName"] ?? "";
+    $password  = $data["password"] ?? "";
 
-    // Hash password
-    $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-
-    // DB connection
+    // Connect to DB
     $conn = new mysqli("localhost", "TheBeast", "WeLoveCOP4331", "COP4331");
     if ($conn->connect_error) {
-        return false;
+        return ["error" => "DB Connection failed: " . $conn->connect_error];
     }
 
+    // Check for duplicate username
+    $checkStmt = $conn->prepare("SELECT ID FROM Users WHERE login = ?");
+    if (!$checkStmt) {
+        $conn->close();
+        return ["error" => "Prepare failed: " . $conn->error];
+    }
+
+    $checkStmt->bind_param("s", $login);
+    $checkStmt->execute();
+    $checkStmt->store_result();
+
+    if ($checkStmt->num_rows > 0) {
+        $checkStmt->close();
+        $conn->close();
+        return ["error" => "Username already in use"];
+    }
+    $checkStmt->close();
+
+    // Insert new user
     $stmt = $conn->prepare("
-        INSERT INTO Users (Username, FirstName, LastName, Email, Password, Phone)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO Users (login, FirstName, LastName, Password)
+        VALUES (?, ?, ?, ?)
     ");
-    $stmt->bind_param("ssssss", $username, $firstName, $lastName, $email, $hashedPassword, $phone);
+    if (!$stmt) {
+        $conn->close();
+        return ["error" => "Prepare failed: " . $conn->error];
+    }
+
+    $stmt->bind_param("ssss", $login, $firstName, $lastName, $password);
 
     if ($stmt->execute()) {
         $newId = $conn->insert_id;
         $stmt->close();
         $conn->close();
-
         return [
             "id"        => $newId,
-            "username"  => $username,
+            "login"     => $login,
             "firstName" => $firstName,
-            "lastName"  => $lastName,
-            "email"     => $email,
-            "phone"     => $phone
+            "lastName"  => $lastName
         ];
     } else {
+        $errorMsg = $stmt->error;
         $stmt->close();
         $conn->close();
-        return false;
+        return ["error" => "Insert failed: " . $errorMsg];
     }
 }
 
+
 /**
- * Login user (verify username + password)
+ * Login user (verify login + password)
  *
- * @param string $username
+ * @param string $login
  * @param string $password
  * @return array|null Returns user record if valid, null otherwise
  */
-function loginUser($username, $password) {
-    // TODO: replace with real DB lookup + password_verify
-    // Example:
-    // global $db;
-    // $stmt = $db->prepare("SELECT id, username, email, password FROM users WHERE username = ?");
-    // $stmt->execute([$username]);
-    // $user = $stmt->fetch(PDO::FETCH_ASSOC);
-    // if ($user && password_verify($password, $user['password'])) {
-    //     unset($user['password']); // don’t leak hash
-    //     return $user;
-    // }
-    // return null;
+function loginUser($login, $password) {
+	$conn = new mysqli("localhost", "TheBeast", "WeLoveCOP4331", "COP4331");
+	if ($conn->connect_error) {
+		return false;
+	}
 
-    // placeholder
-    if ($username === "test" && $password === "1234") {
-        return [
-            "id"       => 1,
-            "username" => "test",
-            "email"    => "test@example.com"
-        ];
-    }
-    return null;
+	$stmt = $conn->prepare("SELECT ID, login, firstName, lastName, password FROM Users WHERE login = ?");
+	$stmt->bind_param("s", $login);
+	$stmt->execute();
+	$result = $stmt->get_result();
+
+	$user = $result->fetch_assoc();
+	$stmt->close();
+	$conn->close();
+
+	if ($user) {
+		#if (password_verify($password, $user['password'])) {
+        if ($password === $user['password']) {
+			unset($user['password']);
+			return $user;
+		}
+	}
+
+	return null;
 }
 
-/**
- * Delete user
- *
- * @param string $username
- * @return bool True if deleted, false otherwise
- */
-function deleteUser($username) {
-    // TODO: replace with real DB delete
-    // Example:
-    // global $db;
-    // $stmt = $db->prepare("DELETE FROM users WHERE username = ?");
-    // return $stmt->execute([$username]);
+function deleteUser($login) {
+    $conn = new mysqli("localhost", "TheBeast", "WeLoveCOP4331", "COP4331");
+    if ($conn->connect_error) {
+        return ["error" => "DB Connection failed: " . $conn->connect_error];
+    }
 
-    return true; // placeholder
+    $stmt = $conn->prepare("DELETE FROM Users WHERE login = ?");
+    if (!$stmt) {
+        $conn->close();
+        return ["error" => "Prepare failed: " . $conn->error];
+    }
+
+    $stmt->bind_param("s", $login);
+
+    if ($stmt->execute()) {
+        $affected = $stmt->affected_rows;
+        $stmt->close();
+        $conn->close();
+        if ($affected > 0) {
+            return ["message" => "User $login deleted"];
+        } else {
+            return ["error" => "User $login not found"];
+        }
+    } else {
+        $errorMsg = $stmt->error;
+        $stmt->close();
+        $conn->close();
+        return ["error" => "Delete failed: " . $errorMsg];
+    }
 }

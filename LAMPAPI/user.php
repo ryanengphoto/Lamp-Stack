@@ -28,7 +28,7 @@ $method  = $_SERVER['REQUEST_METHOD'];
 $request = $_SERVER['REQUEST_URI'];
 
 // adjust base path to match your API root
-$base = "/LAMPAPI/user";
+$base = "/LAMPAPI/user"; // base for /user routes
 
 // strip query string
 if (strpos($request, '?') !== false) {
@@ -36,48 +36,91 @@ if (strpos($request, '?') !== false) {
 }
 
 $path = substr($request, strlen($base));
+$pathLogin = substr($request, strlen($baseLogin));
 
 // --- Routing ---
-if ($method === 'POST' && $path === '') {
-    // POST /user → create user
-    $data = json_decode(file_get_contents("php://input"), true);
 
+// Create user
+if ($method === 'POST' && $path === '') {
+    $data = json_decode(file_get_contents("php://input"), true);
     $newUser = createUser($data);
 
-    if ($newUser) {
+    if (isset($newUser['error'])) {
+        http_response_code(500);
+        echo json_encode($newUser); // send DB error
+    } else {
         echo json_encode([
             "message" => "User created",
             "user"    => $newUser
         ]);
-    } else {
-        http_response_code(500);
-        echo json_encode(["error" => "Failed to create user"]);
     }
 }
 
+// Get user by login
 elseif ($method === 'GET' && preg_match('#^/([^/]+)$#', $path, $matches)) {
-    // GET /user/{username}
-    $username = $matches[1];
-    // TODO: Lookup from DB
+    $login = $matches[1];
+    // TODO: Replace with DB lookup
     echo json_encode([
-        "id"       => 1,
-        "username" => $username,
-        "email"    => "test@example.com"
+        "id"    => 1,
+        "login" => $login,
+        "email" => "test@example.com"
     ]);
 }
+
+// Delete user by login
 elseif ($method === 'DELETE' && preg_match('#^/([^/]+)$#', $path, $matches)) {
-    // DELETE /user/{username}
-    $username = $matches[1];
-    // TODO: Delete from DB
-    echo json_encode([
-        "message" => "User $username deleted"
-    ]);
+    $login = $matches[1];
+    $result = deleteUser($login);
+    if (isset($result['error'])) {
+        http_response_code(404);
+    }
+    echo json_encode($result);
 }
+
+// --- LOGIN route ---
+// POST /login (preferred)
+elseif ($method === 'POST' && $request === $base . '/login') {
+    $data = json_decode(file_get_contents("php://input"), true);
+    $login = $data['login'] ?? '';
+    $password = $data['password'] ?? '';
+
+    $user = loginUser($login, $password);
+
+    if ($user) {
+        echo json_encode([
+            "message" => "Login successful",
+            "user"    => $user
+        ]);
+    } else {
+        http_response_code(401);
+        echo json_encode(["error" => "Invalid credentials"]);
+    }
+}
+
+// GET /login?login=...&password=... (for testing only ⚠️ insecure)
+elseif ($method === 'GET' && $request === $baseLogin) {
+    $login = $_GET['login'] ?? '';
+    $password = $_GET['password'] ?? '';
+
+    $user = loginUser($login, $password);
+
+    if ($user) {
+        echo json_encode([
+            "message" => "Login successful",
+            "user"    => $user
+        ]);
+    } else {
+        http_response_code(401);
+        echo json_encode(["error" => "Invalid credentials"]);
+    }
+}
+
+// Not found
 else {
     http_response_code(404);
     echo json_encode([
-        "error" => "Not Found",
-        "path"  => $path,
-        "method"=> $method
+        "error"  => "Not Found",
+        "path"   => $path,
+        "method" => $method
     ]);
 }
