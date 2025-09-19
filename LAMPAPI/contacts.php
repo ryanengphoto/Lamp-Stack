@@ -9,6 +9,18 @@ and provide contacts methods boilerplate
 require 'contactfunctions.php'; // ✅ use DB-backed functions
 header("Content-Type: application/json");
 
+header("Content-Type: application/json");
+// 🔹 Allow CORS for Swagger UI/browser testing
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+
+// Handle CORS preflight
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
+
 $method  = $_SERVER['REQUEST_METHOD'];
 $request = trim($_SERVER['REQUEST_URI']);
 $base    = "/LAMPAPI/contacts";  
