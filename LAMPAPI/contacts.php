@@ -6,7 +6,7 @@ and provide contacts methods boilerplate
 9/4/2025
 */
 
-require 'db.php';
+require 'contactfunctions.php'; // ✅ use DB-backed functions
 header("Content-Type: application/json");
 
 $method  = $_SERVER['REQUEST_METHOD'];
@@ -14,35 +14,43 @@ $request = trim($_SERVER['REQUEST_URI']);
 $base    = "/LAMPAPI/contacts";  
 $path    = substr($request, strlen($base));
 
+// ------------------- ROUTES -------------------
+
 if ($method === 'GET' && $path === '') {
     // GET /contacts
-    echo json_encode([["id" => 1, "firstName" => "John", "lastName" => "James"]]);
+    $result = getAllContacts();
+    echo json_encode($result);
 }
 elseif ($method === 'POST' && $path === '') {
     // POST /contacts
     $data = json_decode(file_get_contents("php://input"), true);
-    echo json_encode(["message" => "Contact added", "contact" => $data]);
+    $result = addContact($data);
+    echo json_encode($result);
 }
 elseif ($method === 'POST' && $path === '/bulk') {
     // POST /contacts/bulk
     $data = json_decode(file_get_contents("php://input"), true);
-    echo json_encode(["message" => "Bulk add success", "contacts" => $data]);
+    $result = addContactsBulk($data);
+    echo json_encode($result);
 }
 elseif ($method === 'GET' && preg_match('#^/(\d+)$#', $path, $matches)) {
     // GET /contacts/{id}
-    $id = $matches[1];
-    echo json_encode(["id" => $id, "firstName" => "Jane", "lastName" => "Doe"]);
+    $id = (int)$matches[1];
+    $result = getContactById($id);
+    echo json_encode($result);
 }
 elseif ($method === 'PUT' && preg_match('#^/(\d+)$#', $path, $matches)) {
     // PUT /contacts/{id}
-    $id = $matches[1];
+    $id = (int)$matches[1];
     $data = json_decode(file_get_contents("php://input"), true);
-    echo json_encode(["message" => "Contact updated", "id" => $id, "newData" => $data]);
+    $result = updateContact($id, $data);
+    echo json_encode(["results" => $result ? "Contact updated" : "Update failed"]);
 }
 elseif ($method === 'DELETE' && preg_match('#^/(\d+)$#', $path, $matches)) {
     // DELETE /contacts/{id}
-    $id = $matches[1];
-    echo json_encode(["message" => "Contact $id deleted"]);
+    $id = (int)$matches[1];
+    $result = deleteContact($id);
+    echo json_encode(["results" => $result ? "Contact deleted" : "Delete failed"]);
 }
 else {
     http_response_code(404);
