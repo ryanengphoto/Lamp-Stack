@@ -146,52 +146,6 @@ function searchContacts($data)
 }
 
 /**
- * search contacts with string
- * 
- * @param array $data
- * @return array
- */
-function searchContacts($data)
-{
-
-    $search = "%" . $data["search"] . "%";
-    $userId = (int)$data["userId"];
-
-    $conn = new mysqli("localhost", "TheBeast", "WeLoveCOP4331", "COP4331");
-    if ($conn->connect_error)
-    {
-        return ["results" => [], "error" => $conn->connect_error];
-    }
-    else
-    {
-        $stmt = $conn->prepare("SELECT ID, FirstName, LastName, Phone, Email
-                FROM  Contacts
-                WHERE (FirstName LIKE ? OR LastName LIKE ? OR Phone LIKE ? OR Email LIKE ?) AND UserID = ?");
-        $stmt->bind_param("ssssi", $search, $search, $search, $search, $userId);
-        $stmt->execute();
-        $result = $stmt->get_result();
-
-        $searchResults = [];
-        while ($row = $result->fetch_assoc()) 
-        {
-            $searchResults[] =
-            [
-                "id" => (int) $row["ID"], 
-                "firstName" => $row["FirstName"],
-                "lastName" => $row["LastName"],
-                "phone" => $row["Phone"],
-                "email" => $row["Email"]
-            ];
-        }
-        
-        $stmt->close();
-        $conn->close();
-        
-        return ["results" => $searchResults, "error" => ""];
-    }
-}
-
-/**
  * Add a new contact
  *
  * @param array $data

@@ -8,7 +8,7 @@ info:
   license:
     name: Apache 2.0
     url: https://www.apache.org/licenses/LICENSE-2.0.html
-  version: 1.0.0
+  version: 1.0.1
 servers:
   - url: https://lamp-stack4331.xyz/LAMPAPI
 tags:
@@ -19,10 +19,8 @@ tags:
 paths:
   /user:
     post:
-      tags:
-        - user
+      tags: [user]
       summary: Create user
-      description: Register a new user account
       operationId: createUser
       requestBody:
         $ref: '#/components/requestBodies/User'
@@ -38,10 +36,8 @@ paths:
 
   /user/login:
     post:
-      tags:
-        - user
+      tags: [user]
       summary: Login user
-      description: Verify login credentials and return user info (no password)
       operationId: loginUser
       requestBody:
         description: Login credentials
@@ -53,14 +49,10 @@ paths:
               properties:
                 login:
                   type: string
-                  example: theUser
                 password:
                   type: string
                   format: password
-                  example: '12345'
-              required:
-                - login
-                - password
+              required: [login, password]
       responses:
         '200':
           description: Successful login
@@ -75,16 +67,14 @@ paths:
 
   /user/{login}:
     get:
-      tags:
-        - user
+      tags: [user]
       summary: Get user by login
       operationId: getUserByName
       parameters:
         - name: login
           in: path
           required: true
-          schema:
-            type: string
+          schema: { type: string }
       responses:
         '200':
           description: User details
@@ -95,16 +85,14 @@ paths:
         '404':
           description: User not found
     delete:
-      tags:
-        - user
+      tags: [user]
       summary: Delete user
       operationId: deleteUser
       parameters:
         - name: login
           in: path
           required: true
-          schema:
-            type: string
+          schema: { type: string }
       responses:
         '200':
           description: User deleted
@@ -113,8 +101,7 @@ paths:
 
   /contacts:
     get:
-      tags:
-        - contacts
+      tags: [contacts]
       summary: List all contacts
       operationId: listContacts
       responses:
@@ -123,101 +110,122 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Contact'
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items: { $ref: '#/components/schemas/Contact' }
+                  errors:
+                    type: array
+                    items: { type: string }
     post:
-      tags:
-        - contacts
+      tags: [contacts]
       summary: Add a new contact
       operationId: addContact
       requestBody:
         $ref: '#/components/requestBodies/Contact'
       responses:
         '200':
-          description: Contact created
+          description: Contact creation result
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Contact'
+                $ref: '#/components/schemas/ApiResponse'
 
   /contacts/bulk:
     post:
-      tags:
-        - contacts
+      tags: [contacts]
       summary: Add multiple contacts
       operationId: addContactsBulk
       requestBody:
         $ref: '#/components/requestBodies/Contacts'
       responses:
         '200':
-          description: Contacts created
+          description: Bulk add results
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Contact'
+                $ref: '#/components/schemas/ApiResponse'
 
   /contacts/{id}:
     get:
-      tags:
-        - contacts
+      tags: [contacts]
       summary: Get contact by ID
       operationId: getContactById
       parameters:
         - name: id
           in: path
           required: true
-          schema:
-            type: integer
+          schema: { type: integer }
       responses:
         '200':
           description: Contact details
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Contact'
+                $ref: '#/components/schemas/ApiResponse'
         '404':
           description: Contact not found
     put:
-      tags:
-        - contacts
+      tags: [contacts]
       summary: Update contact
       operationId: updateContact
       parameters:
         - name: id
           in: path
           required: true
-          schema:
-            type: integer
+          schema: { type: integer }
       requestBody:
         $ref: '#/components/requestBodies/Contact'
       responses:
         '200':
-          description: Contact updated
+          description: Update result
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Contact'
-        '404':
-          description: Contact not found
+                $ref: '#/components/schemas/ApiResponse'
     delete:
-      tags:
-        - contacts
+      tags: [contacts]
       summary: Delete contact
       operationId: deleteContact
       parameters:
         - name: id
           in: path
           required: true
-          schema:
-            type: integer
+          schema: { type: integer }
       responses:
         '200':
-          description: Contact deleted
-        '404':
-          description: Contact not found
+          description: Delete result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /contacts/search:
+    post:
+      tags: [contacts]
+      summary: Search contacts
+      operationId: searchContacts
+      requestBody:
+        description: Search string and userId
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                search:
+                  type: string
+                userId:
+                  type: integer
+              required: [search, userId]
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
 
 components:
   schemas:
@@ -226,46 +234,43 @@ components:
       properties:
         id:
           type: integer
-          format: int64
           example: 10
         firstName:
           type: string
-          example: John
         lastName:
           type: string
-          example: James
         email:
           type: string
-          example: john@email.com
         phone:
           type: string
-          example: '12345'
+        userId:
+          type: integer
+          example: 1
     User:
       type: object
       properties:
         id:
           type: integer
-          format: int64
-          example: 10
         login:
           type: string
-          example: theUser
         firstName:
           type: string
-          example: John
         lastName:
           type: string
-          example: James
+    ApiResponse:
+      type: object
+      properties:
+        results:
+          description: Successful payload
+        errors:
+          type: array
+          items: { type: string }
     Error:
       type: object
       properties:
-        code:
-          type: string
-        message:
-          type: string
-      required:
-        - code
-        - message
+        code: { type: string }
+        message: { type: string }
+      required: [code, message]
 
   requestBodies:
     User:
