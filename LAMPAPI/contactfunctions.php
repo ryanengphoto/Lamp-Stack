@@ -184,30 +184,81 @@ function addContactsBulk($contacts)
  *
  * @param int $id
  * @param array $data
- * @return bool
+ * @return array
  */
 function updateContact($id, $data) {
-    // TODO: replace with real DB update
-    // Example:
-    // global $db;
-    // $stmt = $db->prepare("UPDATE contacts SET firstName=?, lastName=?, email=?, phone=? WHERE id=?");
-    // return $stmt->execute([...]);
+    $firstName = $data["firstName"] ?? "";
+    $lastName = $data["lastName"] ?? "";
+    $phone = $data["phone"] ?? "";
+    $email = $data["email"] ?? "";
 
-    return true; // placeholder
+    $conn = new mysqli("localhost", "TheBeast", "WeLoveCOP4331", "COP4331");
+    if ($conn->connect_error) {
+        return ["success" => false, "error" => $conn->connect_error];
+    }
+
+    $stmt = $conn->prepare("UPDATE Contacts SET FirstName = ?, LastName = ?, Phone = ?, Email = ? WHERE ID = ?");
+
+    if (!$stmt) {
+        $conn->close();
+        return ["success" => false, "error" => $conn->error];
+    }
+
+    $stmt->bind_param("ssssi", $firstName, $lastName, $phone, $email, $id);
+
+    if ($stmt->execute()) {
+        $rows = $stmt->affected_rows;
+        $stmt->close();
+        $conn->close();
+        if ($rows > 0) {
+            return ["success" => true, "message" => "Contact updated successfully"];
+        } else {
+            return ["success" => false, "error" => "No changes made (contact may not exist)"];
+        }
+    } else {
+        $errorMsg = $stmt->error;
+        $stmt->close();
+        $conn->close();
+        return ["success" => false, "error" => $errorMsg];
+    }
+
 }
 
 /**
  * Delete contact by ID
  *
  * @param int $id
- * @return bool
+ * @return array
  */
 function deleteContact($id) {
-    // TODO: replace with real DB delete
-    // Example:
-    // global $db;
-    // $stmt = $db->prepare("DELETE FROM contacts WHERE id=?");
-    // return $stmt->execute([$id]);
+    $conn = new mysqli("localhost", "TheBeast", "WeLoveCOP4331", "COP4331");
 
-    return true; // placeholder
+    if ($conn->connect_error) {
+        return ["success" => false, "error" => $conn->connect_error];
+    }
+
+    $stmt = $conn->prepare("DELETE FROM Contacts WHERE ID = ?");
+    if (!$stmt) {
+        $conn->close();
+        return ["success" => false, "error" => $conn->error];
+    }
+
+    $stmt->bind_param("i", $id);
+
+    if ($stmt->execute()) {
+        $rows = $stmt->affected_rows;
+        $stmt->close();
+        $conn->close();
+
+        if ($rows > 0) {
+            return ["success" => true, "message" => "Contact deleted successfully"];
+        } else {
+            return ["success" => false, "error" => "No contact found with ID $id"];
+        }
+    } else {
+        $errorMsg = $stmt->error;
+        $stmt->close();
+        $conn->close();
+        return ["success" => false, "error" => $errorMsg];
+    }
 }
