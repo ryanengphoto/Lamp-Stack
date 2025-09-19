@@ -9,22 +9,47 @@ Boilerplate DB functions for contacts endpoint
 // Example: include your DB connection
 // require_once 'db.php';
 
+
 /**
  * Get all contacts
  *
  * @return array
  */
-function getAllContacts() {
-    // TODO: replace with real DB query
-    // Example:
-    // global $db;
-    // $stmt = $db->query("SELECT id, firstName, lastName, email, phone FROM contacts");
-    // return $stmt->fetchAll(PDO::FETCH_ASSOC);
+function getAllContacts()
+{
+    $conn = new mysqli("localhost", "TheBeast", "WeLoveCOP4331", "COP4331");
+    if ($conn->connect_error)
+    {
+        return ["results" => "", "errors" => [$conn->connect_error]];
+    }
 
-    return [
-        ["id" => 1, "firstName" => "John", "lastName" => "James"],
-        ["id" => 2, "firstName" => "Jane", "lastName" => "Doe"]
-    ];
+    $sql = "SELECT ID, FirstName, LastName, Phone, Email, UserID FROM Contacts";
+    $result = $conn->query($sql);
+
+    if (!$result)
+    {
+        $conn->close();
+        return ["results" => "", "errors" => [$conn->error]];
+    }
+
+    $contacts = [];
+    while ($row = $result->fetch_assoc())
+    {
+        $contacts[] = 
+        [
+            "id" => (int) $row["ID"],
+            "firstName" => $row["FirstName"],
+            "lastName" => $row["LastName"],
+            "phone" => $row["Phone"],
+            "email" => $row["Email"],
+            "userId" => (int) $row["UserID"]
+        ];
+    }
+
+    $result->free();
+    $conn->close();
+
+    return ["results" => $contacts, "errors" => []];
 }
 
 /**
@@ -33,36 +58,123 @@ function getAllContacts() {
  * @param int $id
  * @return array|null
  */
-function getContactById($id) {
-    // TODO: replace with real DB query
-    // Example:
-    // global $db;
-    // $stmt = $db->prepare("SELECT * FROM contacts WHERE id = ?");
-    // $stmt->execute([$id]);
-    // return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+function getContactById($id)
+{
+    $conn = new mysqli("localhost", "TheBeast", "WeLoveCOP4331", "COP4331");
+    if ($conn->connect_error)
+    {
+        return ["results" => "", "error" => $conn->connect_error];
+    }
 
-    return ["id" => $id, "firstName" => "Jane", "lastName" => "Doe"];
+    $stmt = $conn->prepare("SELECT ID, FirstName, LastName, Phone, Email, UserID FROM Contacts WHERE ID = ?");
+    if (!$stmt)
+    {
+        $conn->close();
+        return ["results" => null, "errors" => [$conn->error]];
+    }
+
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    $contact = null;
+    if ($row = $result->fetch_assoc())
+    {
+        $contact = 
+        [
+            "id" => (int) $row["ID"], 
+            "firstName" => $row["FirstName"],
+            "lastName" => $row["LastName"],
+            "phone" => $row["Phone"],
+            "email" => $row["Email"],
+            "userId" => $row["UserID"]
+        ];
+    }
+
+    $result->free();
+    $stmt->close();
+    $conn->close();
+    
+
+    return ["results" => $contact, "errors" => []];
+}
+
+/**
+ * search contacts with string
+ * 
+ * @param array $data
+ * @return array
+ */
+function searchContacts($data)
+{
+
+    $search = "%" . $data["search"] . "%";
+    $userId = (int)$data["userId"];
+
+    $conn = new mysqli("localhost", "TheBeast", "WeLoveCOP4331", "COP4331");
+    if ($conn->connect_error)
+    {
+        return ["results" => [], "error" => $conn->connect_error];
+    }
+    else
+    {
+        $stmt = $conn->prepare("SELECT ID, FirstName, LastName, Phone, Email
+                FROM  Contacts
+                WHERE (FirstName LIKE ? OR LastName LIKE ? OR Phone LIKE ? OR Email LIKE ?) AND UserID = ?");
+        $stmt->bind_param("ssssi", $search, $search, $search, $search, $userId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $searchResults = [];
+        while ($row = $result->fetch_assoc()) 
+        {
+            $searchResults[] =
+            [
+                "id" => (int) $row["ID"], 
+                "firstName" => $row["FirstName"],
+                "lastName" => $row["LastName"],
+                "phone" => $row["Phone"],
+                "email" => $row["Email"]
+            ];
+        }
+        
+        $stmt->close();
+        $conn->close();
+        
+        return ["results" => $searchResults, "error" => ""];
+    }
 }
 
 /**
  * Add a new contact
  *
  * @param array $data
- * @return array|false
+ * @return array
  */
 function addContact($data) {
-    // TODO: replace with real DB insert
-    // Example:
-    // global $db;
-    // $stmt = $db->prepare("INSERT INTO contacts (firstName, lastName, email, phone) VALUES (?, ?, ?, ?)");
-    // $stmt->execute([$data['firstName'], $data['lastName'], $data['email'], $data['phone']]);
-    // return ["id" => $db->lastInsertId()] + $data;
 
-    return [
-        "id"        => 123,
-        "firstName" => $data['firstName'] ?? null,
-        "lastName"  => $data['lastName'] ?? null
-    ];
+    $firstName = $data["firstName"];
+    $lastName = $data["lastName"];
+    $phone = $data["phone"];
+    $email = $data["email"];
+    $userId = (int)($data["userId"]);
+
+    $conn = new mysqli("localhost", "TheBeast", "WeLoveCOP4331", "COP4331");
+    if ($conn->connect_error)
+    {
+        return ["results" => "", "error" => $conn->connect_error];
+    }
+    else
+    {
+        $stmt = $conn->prepare("INSERT INTO Contacts (FirstName, LastName, Phone, Email, UserID) VALUES (?, ?, ?, ?, ?)");
+        $stmt->bind_param("ssssi", $firstName, $lastName, $phone, $email, $userId);
+        $stmt->execute();
+        $stmt->close();
+        $conn->close();
+
+        return ["results" => "Contact added successfully.", "error" => ""];
+    }
+
 }
 
 /**
@@ -71,11 +183,54 @@ function addContact($data) {
  * @param array $contacts
  * @return array
  */
-function addContactsBulk($contacts) {
-    // TODO: loop + insert into DB
-    // Example:
-    // foreach ($contacts as $c) { ... }
-    return $contacts;
+function addContactsBulk($contacts)
+{
+    $conn = new mysqli("localhost", "TheBeast", "WeLoveCOP4331", "COP4331");
+    if ($conn->connect_error)
+    {
+        return ["results" => "", "errors" => [$conn->connect_error]];
+    }
+
+    $stmt = $conn->prepare
+    (
+        "INSERT INTO Contacts (FirstName, LastName, Phone, Email, UserID) VALUES (?, ?, ?, ?, ?)"
+    );
+
+    if (!$stmt)
+    {
+        $conn->close();
+        return ["results" => "", "errors" => [$conn->error]];
+    }
+
+    $numSuccess = 0;
+    $errors = [];
+
+    //add contacts one by one
+    foreach($contacts as $c)
+    {
+        $firstName = $c["firstName"];
+        $lastName = $c["lastName"];
+        $phone = $c["phone"];
+        $email = $c["email"];
+        $userId = (int) $c["userId"];
+
+        $stmt->bind_param("ssssi", $firstName, $lastName, $phone, $email, $userId);
+
+        if ($stmt->execute())
+        {
+            $numSuccess++;
+        }
+        else
+        {
+            $errors[] = ["contact" => $c, "error" => $stmt->error];
+        }
+    }
+
+    $stmt->close();
+    $conn->close();
+
+
+    return ["results" => "$numSuccess contacts were added successfully", "errors" => $errors];
 }
 
 /**
