@@ -2,25 +2,29 @@ openapi: 3.0.4
 info:
   title: ContactBook Manager - OpenAPI 3.0
   description: |-
-    This is a web server hosting the ContactBook Manager project for COP4331 for group 11 for the fall semester of 2025.
-    - [Github](https://github.com/ryanengphoto/Lamp-Stack)
+    ContactBook Manager project for COP4331 Group 11 (Fall 2025).
+    - [GitHub](https://github.com/ryanengphoto/Lamp-Stack)
   termsOfService: https://swagger.io/terms/
   license:
     name: Apache 2.0
     url: https://www.apache.org/licenses/LICENSE-2.0.html
-  version: 1.0.1
+  version: 1.0.0
+
 servers:
   - url: https://lamp-stack4331.xyz/LAMPAPI
+
 tags:
   - name: user
     description: Operations about the user
   - name: contacts
     description: Operations about the contactbook
+
 paths:
   /user:
     post:
       tags: [user]
       summary: Create user
+      description: Register a new user account
       operationId: createUser
       requestBody:
         $ref: '#/components/requestBodies/User'
@@ -38,10 +42,11 @@ paths:
     post:
       tags: [user]
       summary: Login user
+      description: Verify login credentials and return user info (no password)
       operationId: loginUser
       requestBody:
-        description: Login credentials
         required: true
+        description: Login credentials
         content:
           application/json:
             schema:
@@ -49,9 +54,11 @@ paths:
               properties:
                 login:
                   type: string
+                  example: theUser
                 password:
                   type: string
                   format: password
+                  example: '12345'
               required: [login, password]
       responses:
         '200':
@@ -74,7 +81,8 @@ paths:
         - name: login
           in: path
           required: true
-          schema: { type: string }
+          schema:
+            type: string
       responses:
         '200':
           description: User details
@@ -92,7 +100,8 @@ paths:
         - name: login
           in: path
           required: true
-          schema: { type: string }
+          schema:
+            type: string
       responses:
         '200':
           description: User deleted
@@ -110,14 +119,9 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  results:
-                    type: array
-                    items: { $ref: '#/components/schemas/Contact' }
-                  errors:
-                    type: array
-                    items: { type: string }
+                type: array
+                items:
+                  $ref: '#/components/schemas/Contact'
     post:
       tags: [contacts]
       summary: Add a new contact
@@ -126,11 +130,11 @@ paths:
         $ref: '#/components/requestBodies/Contact'
       responses:
         '200':
-          description: Contact creation result
+          description: Contact created
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
+                $ref: '#/components/schemas/Contact'
 
   /contacts/bulk:
     post:
@@ -141,11 +145,13 @@ paths:
         $ref: '#/components/requestBodies/Contacts'
       responses:
         '200':
-          description: Bulk add results
+          description: Contacts created
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
+                type: array
+                items:
+                  $ref: '#/components/schemas/Contact'
 
   /contacts/{id}:
     get:
@@ -156,34 +162,76 @@ paths:
         - name: id
           in: path
           required: true
-          schema: { type: integer }
+          schema:
+            type: integer
       responses:
         '200':
           description: Contact details
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
+                $ref: '#/components/schemas/Contact'
         '404':
           description: Contact not found
     put:
       tags: [contacts]
-      summary: Update contact
+      summary: Update a specific contact
+      description: Update one of the user’s contacts by ID.
       operationId: updateContact
       parameters:
         - name: id
           in: path
           required: true
-          schema: { type: integer }
+          schema:
+            type: integer
+            example: 10
+          description: ID of the contact to update
       requestBody:
-        $ref: '#/components/requestBodies/Contact'
+        required: true
+        description: New values for the contact. All fields are required.
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName:
+                  type: string
+                  example: Jane
+                lastName:
+                  type: string
+                  example: Doe
+                email:
+                  type: string
+                  format: email
+                  example: jane.doe@email.com
+                phone:
+                  type: string
+                  example: "555-1234"
+              required: [firstName, lastName, email, phone]
       responses:
         '200':
-          description: Update result
+          description: Contact updated successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Contact updated successfully
+                  error:
+                    type: string
+                    nullable: true
+                    example: null
+        '404':
+          description: Contact not found
+        '400':
+          description: Invalid input
+        default:
+          $ref: '#/components/responses/ErrorResponse'
     delete:
       tags: [contacts]
       summary: Delete contact
@@ -192,40 +240,13 @@ paths:
         - name: id
           in: path
           required: true
-          schema: { type: integer }
+          schema:
+            type: integer
       responses:
         '200':
-          description: Delete result
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponse'
-
-  /contacts/search:
-    post:
-      tags: [contacts]
-      summary: Search contacts
-      operationId: searchContacts
-      requestBody:
-        description: Search string and userId
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                search:
-                  type: string
-                userId:
-                  type: integer
-              required: [search, userId]
-      responses:
-        '200':
-          description: Search results
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponse'
+          description: Contact deleted
+        '404':
+          description: Contact not found
 
 components:
   schemas:
@@ -234,42 +255,43 @@ components:
       properties:
         id:
           type: integer
+          format: int64
           example: 10
         firstName:
           type: string
+          example: John
         lastName:
           type: string
+          example: James
         email:
           type: string
+          example: john@email.com
         phone:
           type: string
-        userId:
-          type: integer
-          example: 1
+          example: "12345"
     User:
       type: object
       properties:
         id:
           type: integer
+          format: int64
+          example: 10
         login:
           type: string
+          example: theUser
         firstName:
           type: string
+          example: John
         lastName:
           type: string
-    ApiResponse:
-      type: object
-      properties:
-        results:
-          description: Successful payload
-        errors:
-          type: array
-          items: { type: string }
+          example: James
     Error:
       type: object
       properties:
-        code: { type: string }
-        message: { type: string }
+        code:
+          type: string
+        message:
+          type: string
       required: [code, message]
 
   requestBodies:
