@@ -1,140 +1,122 @@
-body 
-{
-    background-color: #707070;
+/* --- Beach background --- */
+.beach-bg {
+  min-height: 100dvh;
+  margin: 0;
+  background: #bde0fe url("../images/beach.jpg") center/cover no-repeat fixed;
+  position: relative;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  color: #0b2545;
 }
 
-#title 
-{
-    font-size: 40px;
-    width: 100%;
-    margin: 2% 5%;
-    text-align: center;
-    font-family: 'Ubuntu', sans-serif;
-    color: #FFFFFF;
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.15) 40%, rgba(0,0,0,0.25) 100%);
+  pointer-events: none;
 }
 
-#loginDiv
-{
-    font-size: 30px;
-    width: 70%;
-    margin-left: 15%;
-    padding: 25px;
-    background-color: #b2b2b2;
+/* --- Layout --- */
+.auth-container {
+  position: relative;
+  z-index: 1;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
 }
 
-#loggedInDiv
-{
-    font-size: 30px;
-    width: 70%;
-    margin-left: 15%;
-    padding: 25px;
-    background-color: #b2b2b2;
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  background: rgba(255,255,255,0.9);
+  backdrop-filter: blur(6px);
+  border-radius: 18px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+  padding: 28px;
 }
 
-#accessUIDiv
-{
-    font-size: 30px;
-    width: 70%;
-    margin-left: 15%;
-    padding: 25px;
-    background-color: #b2b2b2;
+.brand {
+  margin: 0 0 6px 0;
+  font-size: 28px;
+  letter-spacing: 0.3px;
 }
 
-.buttons
-{
-    font-size: 30px;
-    border-radius: 25px;
-    width: 50%;
-    margin-left: 25%;
-    font-family: 'Ubuntu', sans-serif;
+.subtitle {
+  margin: 0 0 18px 0;
+  opacity: 0.75;
 }
 
-.buttons:hover{
-    background-color: #00d5124f;
-    color: #FFFFFF;
-    opacity: 50%;
+/* --- Form --- */
+.auth-form {
+  display: grid;
+  gap: 14px;
 }
 
-#loginName
-{
-	font-size: 30px;
-}
-#loginPassword
-{
-	font-size: 30px;
-}
-#searchText
-{
-	font-size: 30px;
-}
-#colorText
-{
-	font-size: 30px;
+.field {
+  display: grid;
+  gap: 6px;
 }
 
-input[type="text"],input[type="password"]{
-    border-radius: 25px;
-    text-align: center;
-    width: 80%;
-    margin-left: 10%;
-    margin-bottom: 2%;
-    font-family: 'Ubuntu', sans-serif;
+.field span {
+  font-size: 14px;
+  opacity: 0.9;
 }
 
-#inner-title{
-    display: inline-block;
-    font-size: 0.8em;
-    width: 90%;
-    text-align: center;
-    margin-left: 5%;
-    margin-bottom: 2%;
-    font-family: 'Ubuntu', sans-serif;
-    color: #95060a;
+.field input {
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(11,37,69,0.15);
+  outline: none;
+  background: rgba(255,255,255,0.95);
+  font-size: 15px;
 }
 
-#loginResult{
-    display: inline-block;
-    font-size: 0.8em;
-    width: 90%;
-    text-align: center;
-    margin-left: 5%;
-    margin-bottom: 2%;
-    font-family: 'Ubuntu', sans-serif;
-    color: #95060a;
+.field input:focus {
+  border-color: #1e6091;
+  box-shadow: 0 0 0 3px rgba(30,96,145,0.15);
 }
 
-#userName{
-    display: inline-block;
-    width: 80%;
-    margin-left: 10%;
-    text-align: center;
+/* --- Buttons --- */
+.btn {
+  cursor: pointer;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  font-weight: 600;
+  letter-spacing: 0.3px;
 }
 
-#logoutButton{
-    width: 20%;
-    margin-left: 40%;
+.btn.primary {
+  background: linear-gradient(135deg, #1e6091, #168aad);
+  color: #fff;
 }
 
-select{
-    width: 30%;
-    margin-left: 35%;
-    margin-top: 2%;
-    font-size: 0.75em;
-    font-family: 'Ubuntu', sans-serif;
+.btn.primary:hover {
+  filter: brightness(1.05);
 }
 
-#colorSearchResult{
-    display: none;
+.btn.ghost {
+  background: transparent;
+  color: #1e6091;
+  border-color: rgba(30,96,145,0.35);
 }
 
-#colorAddResult{
-    display: inline-block;
-    font-size: 0.8em;
-    width: 90%;
-    text-align: center;
-    margin-left: 5%;
-    margin-top: 2%;
-    margin-bottom: 1%;
-    font-family: 'Ubuntu', sans-serif;
-    color: #95060a;
+.btn.ghost:hover {
+  background: rgba(30,96,145,0.08);
 }
+
+/* --- Result / footer --- */
+.result {
+  margin-top: 10px;
+  min-height: 20px;
+  color: #b00020;
+  font-size: 14px;
+}
+
+.footer {
+  margin-top: 18px;
+  text-align: center;
+  color: #ffffffcc;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+}
+
